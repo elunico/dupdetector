@@ -1,25 +1,25 @@
+#include <functional>
 #include <iostream>
 #include "sha256util.hpp"
 #include <map>
 #include <filesystem>
 
-void clearLine(std::ostream& os, unsigned long long cols) {
-    for (int i = 0; i < cols; i++)
-      os << "\x08";
-}
+using ull = unsigned long long ;
 
-void multiWrite(std::ostream& os, char c, unsigned long long amt) {
-  for (int i = 0; i < amt; i++)
-    os << c; 
-}
+struct times {
+  ull count; 
+  std::string data; 
 
-template<typename streamable>
-std::string operator*(streamable const& s, unsigned long long count) {
-  std::stringstream stream;  
-  for (decltype(count) i = 0; i < count; i++) {
-    stream << s; 
+  times(std::string const& s, ull count): data(s), count(count) {
+    
   }
-  return stream.str(); 
+};
+
+std::ostream& operator<<(std::ostream& os, times const& time) {
+  for (decltype(time.count) i = 0; i < time.count; i++) {
+    os << time.data;     
+  }
+  return os; 
 }
 
 int main(int argc, char const *argv[]) {
@@ -29,7 +29,7 @@ int main(int argc, char const *argv[]) {
     return 1;
   }
 
-  unsigned long long cols = strtoull(getenv("COLUMNS"), NULL, 10);
+  ull cols = strtoull(getenv("COLUMNS"), NULL, 10);
 
   std::size_t count = 0;
   std::unordered_map<std::string, std::vector<std::string>> record{};
@@ -39,16 +39,13 @@ int main(int argc, char const *argv[]) {
     std::stringstream s; 
     s << "[" << count++ << "] " << "Hashing " << entry.path() << "...";
     std::string msg = s.str();
-    std::cerr << msg; 
-    std::cerr << (" "s * (cols - msg.length()));
-    std::cerr << ("\x08"s * cols);
+    std::cerr << msg << times(" ", cols - msg.length()) << times("\x08", cols);
   }
 
   std::stringstream s;
   s << "Scanned " << count-1 << " files";
   std::string msg = s.str();
-  std::cerr << msg << (" "s * (count - msg.length()));
-  std::cerr << std::endl;
+  std::cerr << msg << times(" ", count - msg.length()) << std::endl;
   for (auto const& [hash, filenames]: record) {
     if (filenames.size() > 1) {
       long dupcount = 1;
