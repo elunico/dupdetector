@@ -1,13 +1,13 @@
 [
 {
   "directory": "/Users/thomaspovinelli/Coding/dupdetector",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/thomaspovinelli/Coding/dupdetector/. -isystem /usr/local/Cellar/openssl@3/3.2.0_1/include -std=c++17 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.1 -o CMakeFiles/main.dir/main.cpp.o -c /Users/thomaspovinelli/Coding/dupdetector/main.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/thomaspovinelli/Coding/dupdetector/. -isystem /usr/local/Cellar/openssl@3/3.2.0_1/include -std=c++20 -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.1 -o CMakeFiles/main.dir/main.cpp.o -c /Users/thomaspovinelli/Coding/dupdetector/main.cpp",
   "file": "/Users/thomaspovinelli/Coding/dupdetector/main.cpp",
   "output": "CMakeFiles/main.dir/main.cpp.o"
 },
 {
   "directory": "/Users/thomaspovinelli/Coding/dupdetector",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/thomaspovinelli/Coding/dupdetector/. -isystem /usr/local/Cellar/openssl@3/3.2.0_1/include -std=c++17 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.1 -o CMakeFiles/main.dir/sha256util.cpp.o -c /Users/thomaspovinelli/Coding/dupdetector/sha256util.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/thomaspovinelli/Coding/dupdetector/. -isystem /usr/local/Cellar/openssl@3/3.2.0_1/include -std=c++20 -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.1 -o CMakeFiles/main.dir/sha256util.cpp.o -c /Users/thomaspovinelli/Coding/dupdetector/sha256util.cpp",
   "file": "/Users/thomaspovinelli/Coding/dupdetector/sha256util.cpp",
   "output": "CMakeFiles/main.dir/sha256util.cpp.o"
 }
