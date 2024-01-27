@@ -1,11 +1,16 @@
 #include "sha256util.hpp"
+#include <cassert>
 #include <cmath>
 #include <filesystem>
 #include <functional>
 #include <iostream>
 #include <map>
+#include <optional>
+#include <stdexcept>
 #include <string>
+#include <unistd.h>
 #include <unordered_map>
+#include <unordered_set>
 
 using ull = unsigned long long;
 
@@ -70,31 +75,130 @@ void process_duplicates(hashed_directory &directory, auto operation) {
   }
 }
 
-int main(int argc, char const *argv[]) {
-  if (argc < 2) {
-    std::cerr << "Specify path to scan" << std::endl;
-    return 1;
-  }
+struct duplicate_remover {
+  std::unordered_set<std::string> seen{};
+  bool quiet;
 
-  if (!std::filesystem::is_directory(argv[1])) {
-    std::cerr << "Specify path as first argument" << std::endl;
-    return 2;
-  }
-
-  bool (*comparator)(std::string const &, std::string const &) = sacomparator;
-  if (argc == 3) {
-    std::string opt = argv[2];
-    if (opt == "-o") {
-      comparator = sfcomparator;
-    } else if (opt == "-n") {
-      comparator = srcomparator;
-    } else {
-      comparator = sacomparator;
+  void operator()(std::string const &hash,
+                  std::vector<std::string> &filenames) {
+    if (seen.contains(hash))
+      return;
+    seen.insert(hash);
+    auto oldSize = filenames.size();
+    auto survivor = filenames[filenames.size() - 1];
+    if (!quiet) {
+      std::cerr << hash << ": designated survivor is " << survivor << std::endl;
+    }
+    filenames.erase(filenames.end() - 1);
+    auto newSize = filenames.size();
+    assert(oldSize == (newSize + 1));
+    for (int i = 0; i < filenames.size(); i++) {
+      if (!quiet) {
+        std::cerr << "\t [-]: removing " << filenames[i] << std::endl;
+      }
+      std::filesystem::remove(filenames[i]);
     }
   }
+};
+
+struct duplicate_printer {
+  bool doSort;
+  std::function<bool(std::string &, std::string &)> comparator;
+
+  void operator()(std::string const &hash,
+                  std::vector<std::string> &filenames) {
+    long dupcount = 1;
+    std::cout << "Duplicates of " << hash << std::endl;
+    if (doSort)
+      std::sort(filenames.begin(), filenames.end(), comparator);
+    for (auto &filename : filenames) {
+      std::cout << "\t" << dupcount++ << " " << filename << std::endl;
+    }
+  }
+};
+
+struct arguments {
+  enum class comparison_method { OLDEST, NEWEST, RANDOM };
+
+  std::optional<comparison_method> method = std::nullopt;
+  bool doRemove;
+  bool quiet;
+  std::optional<std::string> directory = std::nullopt;
+};
+
+arguments parse_args(int argc, char *const argv[]) {
+  arguments retval{};
+  for (;;) {
+    switch (getopt(argc, argv, "qonrd:")) {
+    case 'd':
+      retval.directory = optarg;
+      continue;
+
+    case 'o':
+      if (retval.method.has_value()) {
+        throw std::invalid_argument("Set -o or -n but not both!");
+      }
+      retval.method = arguments::comparison_method::OLDEST;
+      continue;
+
+    case 'n':
+      if (retval.method.has_value()) {
+        throw std::invalid_argument("Set -o or -n but not both!");
+      }
+      retval.method = arguments::comparison_method::NEWEST;
+      continue;
+    case 'r':
+      retval.doRemove = true;
+      continue;
+    case 'q':
+      retval.quiet = true;
+      continue;
+
+    case '?':
+    case 'h':
+    default:
+      printf("Help/Usage Example\n");
+      break;
+
+    case -1:
+      break;
+    }
+
+    break;
+  }
+  if (!retval.directory.has_value()) {
+    throw std::invalid_argument("Must provide directory after -d");
+  }
+  if (!std::filesystem::is_directory(*retval.directory)) {
+    throw std::invalid_argument("Specify path as first argument");
+  }
+  return retval;
+}
+
+auto get_comparator(std::optional<arguments::comparison_method> method) {
+  bool (*comparator)(std::string const &, std::string const &) = nullptr;
+  if (!method.has_value())
+    return (decltype(comparator))nullptr;
+  switch (*method) {
+  case arguments::comparison_method::NEWEST:
+    comparator = srcomparator;
+  case arguments::comparison_method::OLDEST:
+    comparator = sfcomparator;
+  case arguments::comparison_method::RANDOM:
+  default:
+    comparator = sacomparator;
+  }
+  return comparator;
+}
+
+int main(int argc, char *const argv[]) {
+  arguments args = parse_args(argc, argv);
+
+  bool (*comparator)(std::string const &, std::string const &) =
+      get_comparator(args.method);
 
   // std::size_t count = 0;
-  auto hdir = get_duplicate_contents(argv[1]);
+  auto hdir = get_duplicate_contents(*args.directory);
   auto [record, count] = hdir;
 
   std::stringstream s;
@@ -102,17 +206,12 @@ int main(int argc, char const *argv[]) {
   std::string msg = s.str();
   std::cerr << msg << times(" ", count - msg.length()) << std::endl;
 
-  process_duplicates(
-      hdir, [argc, comparator](std::string const &hash,
-                               std::vector<std::string> &filenames) {
-        long dupcount = 1;
-        std::cout << "Duplicates of " << hash << std::endl;
-        if (argc == 3)
-          std::sort(filenames.begin(), filenames.end(), comparator);
-        for (auto &filename : filenames) {
-          std::cout << "\t" << dupcount++ << " " << filename << std::endl;
-        }
-      });
+  if (args.doRemove) {
+    process_duplicates(hdir, duplicate_remover{});
+  } else {
+    process_duplicates(hdir,
+                       duplicate_printer{comparator != nullptr, comparator});
+  }
 
   return 0;
 }
