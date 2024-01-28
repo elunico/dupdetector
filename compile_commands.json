@@ -1,14 +1,32 @@
 [
 {
   "directory": "/Users/thomaspovinelli/Coding/dupdetector",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/thomaspovinelli/Coding/dupdetector/. -isystem /usr/local/Cellar/openssl@3/3.2.0_1/include -std=c++20 -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.1 -o CMakeFiles/main.dir/main.cpp.o -c /Users/thomaspovinelli/Coding/dupdetector/main.cpp",
-  "file": "/Users/thomaspovinelli/Coding/dupdetector/main.cpp",
-  "output": "CMakeFiles/main.dir/main.cpp.o"
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/thomaspovinelli/Coding/dupdetector/include -isystem /usr/local/Cellar/openssl@3/3.2.0_1/include -std=c++20 -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.1 -o CMakeFiles/main.dir/src/argparse.cpp.o -c /Users/thomaspovinelli/Coding/dupdetector/src/argparse.cpp",
+  "file": "/Users/thomaspovinelli/Coding/dupdetector/src/argparse.cpp",
+  "output": "CMakeFiles/main.dir/src/argparse.cpp.o"
 },
 {
   "directory": "/Users/thomaspovinelli/Coding/dupdetector",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/thomaspovinelli/Coding/dupdetector/. -isystem /usr/local/Cellar/openssl@3/3.2.0_1/include -std=c++20 -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.1 -o CMakeFiles/main.dir/sha256util.cpp.o -c /Users/thomaspovinelli/Coding/dupdetector/sha256util.cpp",
-  "file": "/Users/thomaspovinelli/Coding/dupdetector/sha256util.cpp",
-  "output": "CMakeFiles/main.dir/sha256util.cpp.o"
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/thomaspovinelli/Coding/dupdetector/include -isystem /usr/local/Cellar/openssl@3/3.2.0_1/include -std=c++20 -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.1 -o CMakeFiles/main.dir/src/duplicate_actions.cpp.o -c /Users/thomaspovinelli/Coding/dupdetector/src/duplicate_actions.cpp",
+  "file": "/Users/thomaspovinelli/Coding/dupdetector/src/duplicate_actions.cpp",
+  "output": "CMakeFiles/main.dir/src/duplicate_actions.cpp.o"
+},
+{
+  "directory": "/Users/thomaspovinelli/Coding/dupdetector",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/thomaspovinelli/Coding/dupdetector/include -isystem /usr/local/Cellar/openssl@3/3.2.0_1/include -std=c++20 -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.1 -o CMakeFiles/main.dir/src/main.cpp.o -c /Users/thomaspovinelli/Coding/dupdetector/src/main.cpp",
+  "file": "/Users/thomaspovinelli/Coding/dupdetector/src/main.cpp",
+  "output": "CMakeFiles/main.dir/src/main.cpp.o"
+},
+{
+  "directory": "/Users/thomaspovinelli/Coding/dupdetector",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/thomaspovinelli/Coding/dupdetector/include -isystem /usr/local/Cellar/openssl@3/3.2.0_1/include -std=c++20 -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.1 -o CMakeFiles/main.dir/src/print_util.cpp.o -c /Users/thomaspovinelli/Coding/dupdetector/src/print_util.cpp",
+  "file": "/Users/thomaspovinelli/Coding/dupdetector/src/print_util.cpp",
+  "output": "CMakeFiles/main.dir/src/print_util.cpp.o"
+},
+{
+  "directory": "/Users/thomaspovinelli/Coding/dupdetector",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -I/Users/thomaspovinelli/Coding/dupdetector/include -isystem /usr/local/Cellar/openssl@3/3.2.0_1/include -std=c++20 -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -mmacosx-version-min=14.1 -o CMakeFiles/main.dir/src/sha256util.cpp.o -c /Users/thomaspovinelli/Coding/dupdetector/src/sha256util.cpp",
+  "file": "/Users/thomaspovinelli/Coding/dupdetector/src/sha256util.cpp",
+  "output": "CMakeFiles/main.dir/src/sha256util.cpp.o"
 }
 ]
