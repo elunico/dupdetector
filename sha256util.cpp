@@ -1,16 +1,19 @@
 #include "sha256util.hpp"
+#include <fstream>
+#include <iomanip>
 #include <openssl/sha.h>
+#include <sstream>
 
-SHA256BuildError::SHA256BuildError(std::string const&s) : std::runtime_error(s) {
-}
+SHA256BuildError::SHA256BuildError(std::string const &s)
+    : std::runtime_error(s) {}
 
-SHA256Hash SHA256Hash::ofString(std::string const& s) {  
+SHA256Hash SHA256Hash::ofString(std::string const &s) {
   SHA256Builder builder{};
   builder.update(s);
   return builder.finish();
 }
 
-SHA256Hash SHA256Hash::ofFile(std::string const& filename) {
+SHA256Hash SHA256Hash::ofFile(std::string const &filename) {
   SHA256Builder builder{};
   std::ifstream f{filename, std::ios_base::binary};
 
@@ -31,9 +34,9 @@ std::string SHA256Hash::hex() const {
 }
 
 SHA256Builder::SHA256Builder() {
- int i = SHA256_Init(&ctx);
- if (i == 0) 
-   throw SHA256BuildError("Could not perform SHA256 initialization");
+  int i = SHA256_Init(&ctx);
+  if (i == 0)
+    throw SHA256BuildError("Could not perform SHA256 initialization");
 }
 
 SHA256Hash SHA256Builder::finish() {
@@ -41,9 +44,9 @@ SHA256Hash SHA256Builder::finish() {
     throw std::runtime_error("Builder was already finalized");
   std::array<unsigned char, SHA256_DIGEST_LENGTH> a;
   auto i = SHA256_Final(a.data(), &ctx);
-  if (i == 0) 
+  if (i == 0)
     throw SHA256BuildError("Could not perform SHA256 finalization");
-  invalid = true; 
+  invalid = true;
   SHA256Hash h{};
   h.data = a;
   return h;
