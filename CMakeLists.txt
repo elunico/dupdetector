@@ -4,8 +4,8 @@ project(dupdetect)
 
 set(CMAKE_CXX_FLAGS "-std=c++20 -g")
 include_directories("/usr/local/Cellar/openssl@3/3.2.0_1/include/")
-include_directories(${PROJECT_SOURCE_DIR})
-file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/*.cpp)
+include_directories(${PROJECT_SOURCE_DIR}/include)
+file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 add_executable(main ${SRC_FILES})
 
