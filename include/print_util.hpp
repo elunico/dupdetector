@@ -6,12 +6,12 @@ struct times {
   unsigned long long count;
   std::string data;
 
-  times(std::string const &s, unsigned long long count);
+  times(std::string s, unsigned long long count);
 
   std::string operator*() const;
 };
 
-std::ostream &operator<<(std::ostream &os, times const &time);
+std::ostream& operator<<(std::ostream& os, times const& time);
 
-void print_hashed_message(std::filesystem::directory_entry const &entry,
+void print_hashed_message(std::filesystem::directory_entry const& entry,
                           unsigned long long count);

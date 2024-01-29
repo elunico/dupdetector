@@ -8,13 +8,15 @@ struct duplicate_remover {
   std::unordered_set<std::string> seen{};
   bool quiet;
 
-  void operator()(std::string const &hash, std::vector<std::string> &filenames);
+  void operator()(std::string const& hash, std::vector<std::string>& filenames);
 };
 
 struct duplicate_printer {
-  bool doSort;
-  std::unique_ptr<comparator> comparator;
+  using comparator_type = bool (*)(std::string const&, std::string const&);
 
-  void operator()(std::string const &hash,
-                  std::vector<std::string> &filenames) const;
+  bool doSort;
+  comparator_type comparator;
+
+  void operator()(std::string const& hash,
+                  std::vector<std::string>& filenames) const;
 };

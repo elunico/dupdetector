@@ -1,21 +1,21 @@
 #include "print_util.hpp"
 
-#include <cstdarg>
 #include <sstream>
+#include <utility>
 
-times::times(std::string const &s, unsigned long long count)
-    : count(count), data(s) {}
+times::times(std::string s, unsigned long long count)
+    : count(count), data(std::move(s)) {}
 
-std::ostream &operator<<(std::ostream &os, times const &time) {
+std::ostream& operator<<(std::ostream& os, times const& time) {
   for (decltype(time.count) i = 0; i < time.count; i++) {
     os << time.data;
   }
   return os;
 }
 
-void print_hashed_message(std::filesystem::directory_entry const &entry,
+void print_hashed_message(std::filesystem::directory_entry const& entry,
                           unsigned long long count) {
-  static unsigned long long cols = strtoull(getenv("COLUMNS"), NULL, 10);
+  static unsigned long long cols = strtoull(getenv("COLUMNS"), nullptr, 10);
   std::stringstream s;
   s << "[" << count << "] "
     << "Hashing " << entry.path() << "...";
