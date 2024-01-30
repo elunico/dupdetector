@@ -1,5 +1,7 @@
 #include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <mutex>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -17,38 +19,50 @@ struct hashed_directory {
   unsigned long long count;
 };
 
+struct preprocessed_result {
+  std::string hash;
+  std::filesystem::directory_entry entry;
+};
+
 hashed_directory get_duplicate_contents(std::string const& directory) {
   std::vector<std::filesystem::directory_entry> work{};
-  std::vector<std::tuple<std::string, std::filesystem::directory_entry>>
-      results{};
+  std::vector<preprocessed_result> results{};
 
   std::size_t count = 0;
   std::unordered_map<std::string, std::vector<std::string>> record{};
 
-  std::thread mapper{[&record, &results, &count]() {
-    while (count == 0 && !results.empty()) {
-      auto [hash, entry] = results[results.size() - 1];
-      record[hash].push_back(entry.path());
-      results.pop_back();
-    }
-  }};
   std::vector<std::thread> threads{};
   for (auto const& entry :
        std::filesystem::recursive_directory_iterator(directory)) {
-    // record[hashed].push_back(entry.path());
-    // print_hashed_message(entry, count);
     work.push_back(entry);
   }
 
+  std::recursive_mutex wm{};
+  std::recursive_mutex rm{};
+
   for (int i = 0; i < 16; i++) {
-    std::thread t([&work, &count, &results]() {
+    std::thread t([&work, &count, &results, &wm, &rm, i]() {
+      std::string name = "thread ";
+      name += ('a' + i);
+      std::ofstream tfile{name};
+      tfile << "Starting thread..." << std::endl;
       while (!work.empty()) {
-        auto entry = work[work.size() - 1];
-        auto hashed = SHA256Hash::ofFile(entry.path()).hex();
-        results.push_back(std::make_tuple(hashed, entry));
-        print_hashed_message(entry, count);
-        count++;
-        work.pop_back();
+        bool obtainedLock = false;
+        decltype(work)::value_type entry;
+        if (wm.try_lock() && !work.empty()) {
+          entry = work[work.size() - 1];
+          work.pop_back();
+          obtainedLock = true;
+        }
+        if (obtainedLock) {
+          auto hashed = SHA256Hash::ofFile(entry.path()).hex();
+
+          if (rm.try_lock()) {
+            results.push_back({hashed, entry});
+            print_hashed_message(entry, count);
+          }
+          count++;
+        }
       }
     });
     threads.push_back(std::move(t));
@@ -56,6 +70,13 @@ hashed_directory get_duplicate_contents(std::string const& directory) {
 
   for (int i = 0; i < 16; i++)
     threads[i].join();
+
+  record.reserve(count);
+  while (!results.empty()) {
+    auto [hash, entry] = results[results.size() - 1];
+    record[hash].push_back(entry.path());
+    results.pop_back();
+  }
 
   return {record, count};
 }

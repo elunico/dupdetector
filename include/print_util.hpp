@@ -14,4 +14,5 @@ struct times {
 std::ostream& operator<<(std::ostream& os, times const& time);
 
 void print_hashed_message(std::filesystem::directory_entry const& entry,
-                          unsigned long long count);
+                          unsigned long long count,
+                          std::ostream& os = std::cerr);

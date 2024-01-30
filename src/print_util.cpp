@@ -14,13 +14,14 @@ std::ostream& operator<<(std::ostream& os, times const& time) {
 }
 
 void print_hashed_message(std::filesystem::directory_entry const& entry,
-                          unsigned long long count) {
+                          unsigned long long count,
+                          std::ostream& os) {
   static unsigned long long cols = strtoull(getenv("COLUMNS"), nullptr, 10);
   std::stringstream s;
   s << "[" << count << "] "
     << "Hashing " << entry.path() << "...";
   std::string msg = s.str();
-  std::cerr << msg << times(" ", cols - msg.length()) << times("\x08", cols);
+  os << msg << times(" ", cols - msg.length()) << times("\x08", cols);
 }
 
 std::string times::operator*() const {
