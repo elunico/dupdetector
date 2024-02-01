@@ -7,6 +7,7 @@
 #include <string>
 #include <thread>
 #include <tuple>
+#include <type_traits>
 #include <unordered_map>
 
 #include "argparse.hpp"
@@ -25,6 +26,7 @@ struct preprocessed_result {
 };
 
 hashed_directory get_duplicate_contents(std::string const& directory) {
+  static auto const NUM_THREADS = std::thread::hardware_concurrency();
   std::vector<std::filesystem::directory_entry> work{};
   std::vector<preprocessed_result> results{};
 
@@ -40,7 +42,7 @@ hashed_directory get_duplicate_contents(std::string const& directory) {
   std::recursive_mutex wm{};
   std::recursive_mutex rm{};
 
-  for (int i = 0; i < 16; i++) {
+  for (std::decay_t<decltype(NUM_THREADS)> i = 0; i < NUM_THREADS; i++) {
     std::thread t([&work, &count, &results, &wm, &rm, i]() {
       std::string name = "thread ";
       name += ('a' + i);
@@ -48,19 +50,20 @@ hashed_directory get_duplicate_contents(std::string const& directory) {
       tfile << "Starting thread..." << std::endl;
       while (!work.empty()) {
         bool obtainedLock = false;
-        decltype(work)::value_type entry;
-        if (wm.try_lock() && !work.empty()) {
+        typename decltype(work)::value_type entry;
+        if (!work.empty()) {
+          std::unique_lock l{wm};
           entry = work[work.size() - 1];
           work.pop_back();
           obtainedLock = true;
         }
         if (obtainedLock) {
           auto hashed = SHA256Hash::ofFile(entry.path()).hex();
-
-          if (rm.try_lock()) {
+          {
+            std::unique_lock l{rm};
             results.push_back({hashed, entry});
-            print_hashed_message(entry, count);
           }
+          print_hashed_message(entry, count);
           count++;
         }
       }
@@ -68,7 +71,7 @@ hashed_directory get_duplicate_contents(std::string const& directory) {
     threads.push_back(std::move(t));
   }
 
-  for (int i = 0; i < 16; i++)
+  for (std::decay_t<decltype(NUM_THREADS)> i = 0; i < NUM_THREADS; i++)
     threads[i].join();
 
   record.reserve(count);
