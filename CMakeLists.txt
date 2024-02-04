@@ -11,6 +11,7 @@ file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 add_executable(main ${SRC_FILES})
 
 find_package(OpenSSL REQUIRED)
-target_link_libraries(main OpenSSL::SSL)
+find_package(Threads REQUIRED)
+target_link_libraries(main OpenSSL::SSL Threads::Threads)
 
 # target_link_libraries(dupdetect OpenSSL::crypto)
