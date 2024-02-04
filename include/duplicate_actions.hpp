@@ -1,8 +1,12 @@
+#ifndef DUPLICATE_ACTIONS_HPP
+#define DUPLICATE_ACTIONS_HPP
+
 #include <string>
 #include <unordered_set>
 #include <vector>
 
 #include "argparse.hpp"
+namespace tom::dupdetect {
 
 struct duplicate_remover {
   std::unordered_set<std::string> seen{};
@@ -20,3 +24,7 @@ struct duplicate_printer {
   void operator()(std::string const& hash,
                   std::vector<std::string>& filenames) const;
 };
+
+}  // namespace tom::dupdetect
+
+#endif

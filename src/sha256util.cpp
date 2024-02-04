@@ -6,6 +6,8 @@
 #include <iomanip>
 #include <sstream>
 
+namespace tom::dupdetect {
+
 SHA256BuildError::SHA256BuildError(std::string const& s)
     : std::runtime_error(s) {}
 
@@ -53,3 +55,5 @@ SHA256Hash SHA256Builder::finish() {
   h.data = a;
   return h;
 }
+
+}  // namespace tom::dupdetect

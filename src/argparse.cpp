@@ -1,8 +1,9 @@
 #include "argparse.hpp"
 
 #include <filesystem>
-
 #include "duplicate_actions.hpp"
+
+namespace tom::dupdetect {
 
 void usage() {
   printf("./main -d DIRECTORY [ -n | -o ] [ -r ] [ -q ]\n");
@@ -19,7 +20,7 @@ void usage() {
 duplicate_printer::comparator_type get_comparator(
     std::optional<arguments::comparison_method> method) {
   if (!method.has_value())
-    return nullptr;
+    return (duplicate_printer::comparator_type) nullptr;
   switch (*method) {
     case arguments::comparison_method::NEWEST: {
       return [](std::string const& s, std::string const& r) -> bool {
@@ -93,3 +94,5 @@ arguments parse_args(int argc, char* const argv[]) {
 die:
   throw std::invalid_argument("Invalid CLI args");
 }
+
+}  // namespace tom::dupdetect

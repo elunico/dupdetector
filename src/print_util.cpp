@@ -4,6 +4,7 @@
 #include <sstream>
 #include <utility>
 
+namespace tom::utils {
 times::times(std::string s, unsigned long long count)
     : count(count), data(std::move(s)) {}
 
@@ -23,7 +24,7 @@ void print_hashed_message(std::filesystem::directory_entry const& entry,
   static unsigned long long cols = strtoull(getenv("COLUMNS"), nullptr, 10);
   std::stringstream s;
   s << "[" << count << "] "
-    << "Hashing " << entry.path() << "...";
+    << "Hashing " << entry.path();
   std::string msg = s.str();
   if (msg.size() >= cols) {
     msg = msg.substr(0, cols - 1 - 3) + "...";
@@ -36,3 +37,4 @@ std::string times::operator*() const {
   s << *this;
   return s.str();
 }
+}  // namespace tom::utils

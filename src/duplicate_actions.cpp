@@ -5,18 +5,20 @@
 #include <filesystem>
 #include <iostream>
 
+namespace tom::dupdetect {
+
 void duplicate_remover::operator()(std::string const& hash,
                                    std::vector<std::string>& filenames) {
   if (seen.contains(hash))
     return;
   seen.insert(hash);
-  auto oldSize = filenames.size();
-  auto survivor = filenames[filenames.size() - 1];
+  auto const oldSize = filenames.size();
+  auto const survivor = filenames[filenames.size() - 1];
   if (!quiet) {
     std::cerr << hash << ": designated survivor is " << survivor << std::endl;
   }
   filenames.erase(filenames.end() - 1);
-  auto newSize = filenames.size();
+  auto const newSize = filenames.size();
   assert(oldSize == (newSize + 1));
   for (auto const& filename : filenames) {
     if (!quiet) {
@@ -36,3 +38,4 @@ void duplicate_printer::operator()(std::string const& hash,
     std::cout << "\t" << dupcount++ << " " << filename << std::endl;
   }
 }
+}  // namespace tom::dupdetect

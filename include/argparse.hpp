@@ -7,6 +7,8 @@
 #include <optional>
 #include <string>
 
+namespace tom::dupdetect {
+
 struct arguments {
   enum class comparison_method { OLDEST, NEWEST, RANDOM };
 
@@ -21,4 +23,5 @@ arguments parse_args(int argc, char* const argv[]);
 auto get_comparator(std::optional<arguments::comparison_method> method)
     -> bool (*)(std::string const&, std::string const&);
 
+}  // namespace tom::dupdetect
 #endif

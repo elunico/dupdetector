@@ -1,8 +1,13 @@
+#ifndef SHA256UTIL_HPP
+#define SHA256UTIL_HPP
+
 #include <openssl/sha.h>
 
 #include <array>
 #include <stdexcept>
 #include <string>
+
+namespace tom::dupdetect {
 
 struct SHA256BuildError : public std::runtime_error {
   explicit SHA256BuildError(std::string const& s);
@@ -37,3 +42,6 @@ struct SHA256Builder {
 
   SHA256Hash finish();
 };
+
+}  // namespace tom::dupdetect
+#endif
