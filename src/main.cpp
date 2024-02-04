@@ -19,6 +19,7 @@ namespace tom::dupdetect {
 struct hashed_directory {
   std::unordered_map<std::string, std::vector<std::string>> duplicates;
   unsigned long long count;
+  bool duplicatesFound;
 };
 
 hashed_directory get_duplicate_contents(std::string const& directory) {
@@ -45,33 +46,42 @@ hashed_directory get_duplicate_contents(std::string const& directory) {
   std::vector<std::thread> threads{};
   std::size_t count = 0;
   std::size_t workIndex = work.size() - 1;
+  bool duplicatesFound = false;
   for (std::decay_t<decltype(NUM_THREADS)> i = 0; i < NUM_THREADS; i++) {
-    std::thread t([&work, &count, &record, &wm, &rm, &workIndex]() {
-      while (true) {
-        if (workIndex <= 0) {
-          break;
-        }
-        typename decltype(work)::value_type entry;
-        {
-          std::unique_lock l{wm};
-          entry = work[workIndex--];
-        }
-        auto hashed = SHA256Hash::ofFile(entry.path()).hex();
-        {
-          std::unique_lock l{rm};
-          record[hashed].push_back(entry.path());
-        }
-        tom::utils::print_hashed_message(entry, count);
-        count++;
-      }
-    });
+    std::thread t(
+        [&work, &count, &record, &wm, &rm, &workIndex, &duplicatesFound]() {
+          while (true) {
+            if (workIndex <= 0) {
+              break;
+            }
+            typename decltype(work)::value_type entry;
+            {
+              std::unique_lock l{wm};
+              entry = work[workIndex--];
+              if (entry.is_directory()) {
+                // don't hash directories only files can have duplicates
+                continue;
+              }
+            }
+            auto hashed = SHA256Hash::ofFile(entry.path()).hex();
+            {
+              std::unique_lock l{rm};
+              if (!record[hashed].empty()) {
+                duplicatesFound = true;
+              }
+              record[hashed].push_back(entry.path());
+            }
+            tom::utils::print_hashed_message(entry, count);
+            count++;
+          }
+        });
     threads.push_back(std::move(t));
   }
 
   for (auto& thread : threads)
     thread.join();
 
-  return {record, count};
+  return {record, count, duplicatesFound};
 }
 
 void process_duplicates(hashed_directory& directory, auto operation) {
@@ -88,13 +98,18 @@ int main(int argc, char* const argv[]) {
   auto comp = get_comparator(args.method);
 
   auto hdir = tom::dupdetect::get_duplicate_contents(*args.directory);
-  auto [record, count] = hdir;
+  auto [record, count, duplicatesFound] = hdir;
+  static unsigned long long cols = strtoull(getenv("COLUMNS"), nullptr, 10);
 
   std::stringstream s;
   s << "Scanned " << count - 1 << " files";
   std::string msg = s.str();
-  std::cout << tom::utils::times("\x08", count)
-            << tom::utils::times(" ", count - 1) << msg << std::endl;
+  std::cout << tom::utils::times("\x08", cols) << msg
+            << tom::utils::times(" ", cols - msg.size() - 1) << std::endl;
+
+  if (!duplicatesFound) {
+    std::cout << "No duplicate files found" << std::endl;
+  }
 
   if (args.doRemove) {
     process_duplicates(hdir, tom::dupdetect::duplicate_remover{});
