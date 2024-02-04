@@ -1,3 +1,4 @@
+#include <atomic>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -39,30 +40,29 @@ hashed_directory get_duplicate_contents(std::string const& directory) {
 
   std::recursive_mutex wm{};
   std::recursive_mutex rm{};
+  // std::atomic<std::size_t> atomicWorkIndex(work.size() - 1);
 
   std::vector<std::thread> threads{};
   std::size_t count = 0;
   std::size_t workIndex = work.size() - 1;
   for (std::decay_t<decltype(NUM_THREADS)> i = 0; i < NUM_THREADS; i++) {
-    std::thread t([&work, &count, &record, &wm, &rm, i, &workIndex]() {
-      while (workIndex >= 0) {
-        bool obtainedLock = false;
+    std::thread t([&work, &count, &record, &wm, &rm, &workIndex]() {
+      while (true) {
+        if (workIndex <= 0) {
+          break;
+        }
         typename decltype(work)::value_type entry;
-        if (workIndex >= 0) {
+        {
           std::unique_lock l{wm};
           entry = work[workIndex--];
-          // work.pop_back();
-          obtainedLock = true;
         }
-        if (obtainedLock) {
-          auto hashed = SHA256Hash::ofFile(entry.path()).hex();
-          {
-            std::unique_lock l{rm};
-            record[hashed].push_back(entry.path());
-          }
-          tom::utils::print_hashed_message(entry, count);
-          count++;
+        auto hashed = SHA256Hash::ofFile(entry.path()).hex();
+        {
+          std::unique_lock l{rm};
+          record[hashed].push_back(entry.path());
         }
+        tom::utils::print_hashed_message(entry, count);
+        count++;
       }
     });
     threads.push_back(std::move(t));
