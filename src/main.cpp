@@ -30,8 +30,6 @@ hashed_directory get_duplicate_contents(std::string const& directory) {
   while (iter != end) {
     try {
       auto const& entry = *iter++;
-      if (entry.is_symlink())
-        std::cout << entry.path() << std::endl << std::endl;
       if (!entry.is_directory() && !entry.is_symlink()) {
         // avoid hashing directories due to duplicate collision
         // avoid hashing soft links to avoid removing original files
@@ -45,7 +43,6 @@ hashed_directory get_duplicate_contents(std::string const& directory) {
 
   std::recursive_mutex wm{};
   std::recursive_mutex rm{};
-  // std::atomic<std::size_t> atomicWorkIndex(work.size() - 1);
 
   std::vector<std::thread> threads{};
   std::size_t count = 0;
