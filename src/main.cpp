@@ -1,20 +1,18 @@
 #include <atomic>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
 #include <mutex>
-#include <optional>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <tuple>
-#include <type_traits>
 #include <unordered_map>
 
 #include "argparse.hpp"
 #include "duplicate_actions.hpp"
 #include "print_util.hpp"
 #include "sha256util.hpp"
+
 namespace tom::dupdetect {
 struct hashed_directory {
   std::unordered_map<std::string, std::vector<std::string>> duplicates;
@@ -32,7 +30,13 @@ hashed_directory get_duplicate_contents(std::string const& directory) {
   while (iter != end) {
     try {
       auto const& entry = *iter++;
-      work.push_back(entry);
+      if (entry.is_symlink())
+        std::cout << entry.path() << std::endl << std::endl;
+      if (!entry.is_directory() && !entry.is_symlink()) {
+        // avoid hashing directories due to duplicate collision
+        // avoid hashing soft links to avoid removing original files
+        work.push_back(entry);
+      }
     } catch (std::filesystem::filesystem_error& e) {
       std::cerr << "Filesystem error: " << e.what() << std::endl;
       continue;
@@ -58,10 +62,6 @@ hashed_directory get_duplicate_contents(std::string const& directory) {
             {
               std::unique_lock l{wm};
               entry = work[workIndex--];
-              if (entry.is_directory()) {
-                // don't hash directories only files can have duplicates
-                continue;
-              }
             }
             auto hashed = SHA256Hash::ofFile(entry.path()).hex();
             {
