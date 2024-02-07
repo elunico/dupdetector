@@ -1,20 +1,39 @@
+#ifndef DUPLICATE_ACTIONS_HPP
+#define DUPLICATE_ACTIONS_HPP
+
+#include <filesystem>
 #include <string>
 #include <unordered_set>
 #include <vector>
 
 #include "argparse.hpp"
+namespace tom::dupdetect {
 
 struct duplicate_remover {
   std::unordered_set<std::string> seen{};
   bool quiet;
 
-  void operator()(std::string const &hash, std::vector<std::string> &filenames);
+  void operator()(std::string const& hash, std::vector<std::string>& filenames);
 };
 
 struct duplicate_printer {
-  bool doSort;
-  std::unique_ptr<comparator> comparator;
+  using comparator_type = bool (*)(std::string const&, std::string const&);
 
-  void operator()(std::string const &hash,
-                  std::vector<std::string> &filenames) const;
+  bool doSort;
+  comparator_type comparator;
+
+  void operator()(std::string const& hash,
+                  std::vector<std::string>& filenames) const;
 };
+
+struct duplicate_renamer {
+  std::filesystem::path target_dir;
+  bool quiet;
+
+  void operator()(std::string const& hash,
+                  std::vector<std::string>& filenames) const;
+};
+
+}  // namespace tom::dupdetect
+
+#endif

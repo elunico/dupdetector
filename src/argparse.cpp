@@ -1,6 +1,10 @@
 #include "argparse.hpp"
 
 #include <filesystem>
+#include <stdexcept>
+#include "duplicate_actions.hpp"
+
+namespace tom::dupdetect {
 
 void usage() {
   printf("./main -d DIRECTORY [ -n | -o ] [ -r ] [ -q ]\n");
@@ -14,59 +18,38 @@ void usage() {
       "be combined with -n and -o.\n");
 }
 
-bool sfcomparator(std::string const &s, std::string const &r) {
-  return std::filesystem::last_write_time(std::filesystem::path{s}) <
-         std::filesystem::last_write_time(std::filesystem::path{r});
-}
-
-bool srcomparator(std::string const &s, std::string const &r) {
-  return !sfcomparator(s, r) || s != r;
-}
-
-bool sacomparator(std::string const &s, std::string const &r) { return s < r; }
-
-std::unique_ptr<comparator> get_comparator(
+duplicate_printer::comparator_type get_comparator(
     std::optional<arguments::comparison_method> method) {
-  // bool (*comparator)(std::string const &, std::string const &) = nullptr;
-  if (!method.has_value()) return nullptr;
+  if (!method.has_value())
+    return (duplicate_printer::comparator_type) nullptr;
   switch (*method) {
     case arguments::comparison_method::NEWEST: {
-      struct c1 : public comparator {
-        virtual bool operator()(std::string const &s,
-                                std::string const &r) const override {
-          return std::filesystem::last_write_time(std::filesystem::path{s}) <
-                 std::filesystem::last_write_time(std::filesystem::path{r});
-        }
+      return [](std::string const& s, std::string const& r) -> bool {
+        return std::filesystem::last_write_time(std::filesystem::path{s}) <
+               std::filesystem::last_write_time(std::filesystem::path{r});
       };
-      return std::make_unique<c1>();
     }
     case arguments::comparison_method::OLDEST: {
-      struct c2 : public comparator {
-        virtual bool operator()(std::string const &s,
-                                std::string const &r) const override {
-          return std::filesystem::last_write_time(std::filesystem::path{s}) <
-                 std::filesystem::last_write_time(std::filesystem::path{r});
-        }
+      return [](std::string const& s, std::string const& r) -> bool {
+        return std::filesystem::last_write_time(std::filesystem::path{s}) <
+               std::filesystem::last_write_time(std::filesystem::path{r});
       };
-      return std::make_unique<c2>();
     }
     case arguments::comparison_method::RANDOM:
     default: {
-      struct c3 : public comparator {
-        virtual bool operator()(std::string const &a,
-                                std::string const &b) const override {
-          return a < b;
-        }
-      };
-      return std::make_unique<c3>();
+      return nullptr;
     }
   }
 }
 
-arguments parse_args(int argc, char *const argv[]) {
+arguments parse_args(int argc, char* const argv[]) {
   arguments retval{};
   for (;;) {
-    switch (getopt(argc, argv, "qonrd:")) {
+    switch (getopt(argc, argv, "qonrd:g:")) {
+      case 'g':
+        retval.target_dir = optarg;
+        continue;
+
       case 'd':
         retval.directory = optarg;
         continue;
@@ -109,8 +92,14 @@ arguments parse_args(int argc, char *const argv[]) {
   if (!std::filesystem::is_directory(*retval.directory)) {
     throw std::invalid_argument("Specify path as first argument");
   }
+  if (retval.doRemove && retval.target_dir.has_value()) {
+    throw std::invalid_argument(
+        "Specify either -r for remove or -g for renaming files but not both");
+  }
   return retval;
 
 die:
   throw std::invalid_argument("Invalid CLI args");
 }
+
+}  // namespace tom::dupdetect

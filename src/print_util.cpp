@@ -1,26 +1,35 @@
 #include "print_util.hpp"
 
-#include <cstdarg>
+#include <mutex>
 #include <sstream>
+#include <utility>
 
-times::times(std::string const &s, unsigned long long count)
-    : count(count), data(s) {}
+namespace tom::utils {
+times::times(std::string s, unsigned long long count)
+    : count(count), data(std::move(s)) {}
 
-std::ostream &operator<<(std::ostream &os, times const &time) {
+std::ostream& operator<<(std::ostream& os, times const& time) {
   for (decltype(time.count) i = 0; i < time.count; i++) {
     os << time.data;
   }
   return os;
 }
 
-void print_hashed_message(std::filesystem::directory_entry const &entry,
-                          unsigned long long count) {
-  static unsigned long long cols = strtoull(getenv("COLUMNS"), NULL, 10);
+static std::mutex outmut{};
+
+void print_hashed_message(std::filesystem::directory_entry const& entry,
+                          unsigned long long count,
+                          std::ostream& os) {
+  std::unique_lock l(outmut);
+  static unsigned long long cols = strtoull(getenv("COLUMNS"), nullptr, 10);
   std::stringstream s;
   s << "[" << count << "] "
-    << "Hashing " << entry.path() << "...";
+    << "Hashing " << entry.path();
   std::string msg = s.str();
-  std::cerr << msg << times(" ", cols - msg.length()) << times("\x08", cols);
+  if (msg.size() >= cols) {
+    msg = msg.substr(0, cols - 1 - 3) + "...";
+  }
+  os << msg << times(" ", cols - msg.length()) << times("\x08", cols);
 }
 
 std::string times::operator*() const {
@@ -28,3 +37,4 @@ std::string times::operator*() const {
   s << *this;
   return s.str();
 }
+}  // namespace tom::utils
