@@ -1,6 +1,7 @@
 #include "argparse.hpp"
 
 #include <filesystem>
+#include <stdexcept>
 #include "duplicate_actions.hpp"
 
 namespace tom::dupdetect {
@@ -36,9 +37,7 @@ duplicate_printer::comparator_type get_comparator(
     }
     case arguments::comparison_method::RANDOM:
     default: {
-      return [](std::string const& s, std::string const& r) -> bool {
-        return s < r;
-      };
+      return nullptr;
     }
   }
 }
@@ -46,7 +45,11 @@ duplicate_printer::comparator_type get_comparator(
 arguments parse_args(int argc, char* const argv[]) {
   arguments retval{};
   for (;;) {
-    switch (getopt(argc, argv, "qonrd:")) {
+    switch (getopt(argc, argv, "qonrd:g:")) {
+      case 'g':
+        retval.target_dir = optarg;
+        continue;
+
       case 'd':
         retval.directory = optarg;
         continue;
@@ -88,6 +91,10 @@ arguments parse_args(int argc, char* const argv[]) {
   }
   if (!std::filesystem::is_directory(*retval.directory)) {
     throw std::invalid_argument("Specify path as first argument");
+  }
+  if (retval.doRemove && retval.target_dir.has_value()) {
+    throw std::invalid_argument(
+        "Specify either -r for remove or -g for renaming files but not both");
   }
   return retval;
 

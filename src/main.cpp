@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <iostream>
 #include <mutex>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -20,10 +21,8 @@ struct hashed_directory {
   bool duplicatesFound;
 };
 
-hashed_directory get_duplicate_contents(std::string const& directory) {
-  static auto const NUM_THREADS = std::thread::hardware_concurrency();
-  std::unordered_map<std::string, std::vector<std::string>> record{};
-
+std::vector<std::filesystem::directory_entry> get_dir_work(
+    std::string const& directory) {
   std::vector<std::filesystem::directory_entry> work{};
   auto iter = std::filesystem::recursive_directory_iterator(directory);
   auto end = std::filesystem::end(iter);
@@ -40,6 +39,14 @@ hashed_directory get_duplicate_contents(std::string const& directory) {
       continue;
     }
   }
+  return work;
+}
+
+hashed_directory get_duplicate_contents(std::string const& directory) {
+  static auto const NUM_THREADS = std::thread::hardware_concurrency();
+  std::vector<std::filesystem::directory_entry> work = get_dir_work(directory);
+
+  std::unordered_map<std::string, std::vector<std::string>> record{};
 
   std::recursive_mutex wm{};
   std::recursive_mutex rm{};
@@ -91,7 +98,17 @@ void process_duplicates(hashed_directory& directory, auto operation) {
 }  // namespace tom::dupdetect
 
 int main(int argc, char* const argv[]) {
-  tom::dupdetect::arguments args = tom::dupdetect::parse_args(argc, argv);
+  tom::dupdetect::arguments args{};
+  if (argc == 2) {
+    if (std::filesystem::is_directory(argv[1])) {
+      args.directory = argv[1];
+      args.doRemove = false;
+      args.method = std::nullopt;
+      args.quiet = false;
+    }
+  } else {
+    args = tom::dupdetect::parse_args(argc, argv);
+  }
   auto comp = get_comparator(args.method);
 
   auto hdir = tom::dupdetect::get_duplicate_contents(*args.directory);
@@ -110,6 +127,10 @@ int main(int argc, char* const argv[]) {
 
   if (args.doRemove) {
     process_duplicates(hdir, tom::dupdetect::duplicate_remover{});
+  } else if (args.target_dir.has_value()) {
+    std::filesystem::path p{*args.directory};
+    p.append(*args.target_dir);
+    process_duplicates(hdir, tom::dupdetect::duplicate_renamer{p, false});
   } else {
     process_duplicates(
         hdir, tom::dupdetect::duplicate_printer{comp != nullptr, comp});

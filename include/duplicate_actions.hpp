@@ -1,6 +1,7 @@
 #ifndef DUPLICATE_ACTIONS_HPP
 #define DUPLICATE_ACTIONS_HPP
 
+#include <filesystem>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -20,6 +21,14 @@ struct duplicate_printer {
 
   bool doSort;
   comparator_type comparator;
+
+  void operator()(std::string const& hash,
+                  std::vector<std::string>& filenames) const;
+};
+
+struct duplicate_renamer {
+  std::filesystem::path target_dir;
+  bool quiet;
 
   void operator()(std::string const& hash,
                   std::vector<std::string>& filenames) const;

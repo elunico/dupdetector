@@ -38,4 +38,24 @@ void duplicate_printer::operator()(std::string const& hash,
     std::cout << "\t" << dupcount++ << " " << filename << std::endl;
   }
 }
+
+void duplicate_renamer::operator()(std::string const& hash,
+                                   std::vector<std::string>& filenames) const {
+  if (!std::filesystem::is_directory(target_dir)) {
+    std::filesystem::create_directory(target_dir);
+  }
+  auto survivor = filenames[filenames.size() - 1];
+  filenames.pop_back();
+
+  for (auto const& name : filenames) {
+    std::filesystem::path dest = target_dir;
+    std::filesystem::path file{name};
+    auto filename = file.filename();
+    dest.append(filename.string());
+    if (!quiet)
+      std::cout << "Moving " << name << " to " << dest << std::endl;
+    std::filesystem::rename(name, dest);
+  }
+}
+
 }  // namespace tom::dupdetect

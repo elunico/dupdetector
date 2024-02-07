@@ -16,6 +16,7 @@ struct arguments {
   bool doRemove{};
   bool quiet{};
   std::optional<std::string> directory = std::nullopt;
+  std::optional<std::string> target_dir = std::nullopt;
 };
 
 arguments parse_args(int argc, char* const argv[]);
