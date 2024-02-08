@@ -21,8 +21,8 @@ struct hashed_directory {
   bool duplicatesFound;
 };
 
-std::vector<std::filesystem::directory_entry> get_dir_work(
-    std::string const& directory) {
+std::vector<std::filesystem::directory_entry>
+get_dir_work(std::string const& directory) {
   std::vector<std::filesystem::directory_entry> work{};
   auto iter = std::filesystem::recursive_directory_iterator(directory);
   auto end = std::filesystem::end(iter);
