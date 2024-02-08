@@ -7,19 +7,36 @@
 namespace tom::dupdetect {
 
 void usage() {
-  printf("./main -d DIRECTORY [ -n | -o ] [ -r ] [ -q ]\n");
-  printf("       -d DIRECTORY the directory to scan for duplicates\n");
-  printf("       -n sort duplicates by newest file write time first\n");
-  printf("       -o sort duplicates by oldest file write time first\n");
-  printf("       -q run in quiet mode\n");
+  printf("./main DIRECTORY\n");
   printf(
-      "       -r DELETE all but the first of all duplicates of each "
-      "file. Can "
-      "be combined with -n and -o.\n");
+      "  this is the default action to recursively scan DIRECTORY for"
+      " duplicates and print out all the duplicates at the end. For more "
+      "options, use the flags below\n\n");
+  printf("./main -d DIRECTORY [ -r | -g DUP_DIR [ -n | -o ] ] [ -q ]\n");
+  printf("       -d DIRECTORY the directory to scan for duplicates\n");
+  printf(
+      "       if -r is specified all but one of the duplicates found are "
+      "DELETED. \n");
+  printf(
+      "       if -g DUP_DIR is specified, all but one duplicate files will be "
+      "moved into the folder DUP_DIR. This folder MUST be a subfolder of "
+      "DIRECTORY\n");
+  printf(
+      "         if either -r or -g is used, then the order in which files are "
+      "organized can be affected. The LAST file in each list survives\n");
+  printf(
+      "         -n sort duplicates by newest file write time first, thus "
+      "saving "
+      "the oldest file\n");
+  printf(
+      "         -o sort duplicates by oldest file write time first, thus "
+      "saving "
+      "the newest file\n");
+  printf("       -q run in quiet mode\n");
 }
 
-duplicate_printer::comparator_type get_comparator(
-    std::optional<arguments::comparison_method> method) {
+duplicate_printer::comparator_type
+get_comparator(std::optional<arguments::comparison_method> method) {
   if (!method.has_value())
     return (duplicate_printer::comparator_type) nullptr;
   switch (*method) {

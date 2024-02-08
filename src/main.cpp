@@ -99,7 +99,10 @@ void process_duplicates(hashed_directory& directory, auto operation) {
 
 int main(int argc, char* const argv[]) {
   tom::dupdetect::arguments args{};
-  if (argc == 2) {
+  if (argc == 2 && argv[1][0] == '-' && argv[1][1] == 'h') {
+    tom::dupdetect::usage();
+    exit(1);
+  } else if (argc == 2 && std::string(argv[1]) != "-h") {
     if (std::filesystem::is_directory(argv[1])) {
       args.directory = argv[1];
       args.doRemove = false;

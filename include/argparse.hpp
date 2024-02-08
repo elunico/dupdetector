@@ -9,6 +9,8 @@
 
 namespace tom::dupdetect {
 
+void usage();
+
 struct arguments {
   enum class comparison_method { OLDEST, NEWEST, RANDOM };
 
