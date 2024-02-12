@@ -3,3 +3,4 @@ Language:        Cpp
 BasedOnStyle:  Chromium
 AllowShortBlocksOnASingleLine: false
 PenaltyReturnTypeOnItsOwnLine: 0
+InsertBraces: true

@@ -14,6 +14,18 @@
 #include "print_util.hpp"
 #include "sha256util.hpp"
 
+namespace utils {
+
+template <typename T, std::size_t const width = sizeof(T)>
+std::array<std::byte, width> hosttons(T t) {
+  std::array<std::byte, width> w{};
+  for (int i = 0; i < width; i++) {
+    w[i] = (t >> (8 * i)) | 0xff;
+  }
+}
+
+}  // namespace utils
+
 namespace tom::dupdetect {
 struct hashed_directory {
   std::unordered_map<std::string, std::vector<std::string>> duplicates;
@@ -82,13 +94,19 @@ hashed_directory get_duplicate_contents(std::string const& directory) {
     threads.push_back(std::move(t));
   }
 
-  for (auto& thread : threads)
+  for (auto& thread : threads) {
     thread.join();
+  }
 
   return {record, count, duplicatesFound};
 }
 
-void process_duplicates(hashed_directory& directory, auto operation) {
+template <class T>
+concept DuplicateOperation =
+    requires(T t, std::string& s, std::vector<std::string>& v) { t(s, v); };
+
+void process_duplicates(hashed_directory& directory,
+                        DuplicateOperation auto operation) {
   for (auto& [hash, filenames] : directory.duplicates) {
     if (filenames.size() > 1) {
       operation(hash, filenames);
@@ -97,26 +115,15 @@ void process_duplicates(hashed_directory& directory, auto operation) {
 }
 }  // namespace tom::dupdetect
 
+char *c;
+static unsigned long long cols = strtoull((c = getenv("COLUMNS")) != nullptr ? c : "79", nullptr, 10);
+
 int main(int argc, char* const argv[]) {
-  tom::dupdetect::arguments args{};
-  if (argc == 2 && argv[1][0] == '-' && argv[1][1] == 'h') {
-    tom::dupdetect::usage();
-    exit(1);
-  } else if (argc == 2 && std::string(argv[1]) != "-h") {
-    if (std::filesystem::is_directory(argv[1])) {
-      args.directory = argv[1];
-      args.doRemove = false;
-      args.method = std::nullopt;
-      args.quiet = false;
-    }
-  } else {
-    args = tom::dupdetect::parse_args(argc, argv);
-  }
-  auto comp = get_comparator(args.method);
+  auto args = tom::dupdetect::get_args(argc, argv);
+  auto comp = tom::dupdetect::get_comparator(args.method);
 
   auto hdir = tom::dupdetect::get_duplicate_contents(*args.directory);
   auto [record, count, duplicatesFound] = hdir;
-  static unsigned long long cols = strtoull(getenv("COLUMNS"), nullptr, 10);
 
   std::stringstream s;
   s << "Scanned " << count - 1 << " files";
@@ -131,9 +138,14 @@ int main(int argc, char* const argv[]) {
   if (args.doRemove) {
     process_duplicates(hdir, tom::dupdetect::duplicate_remover{});
   } else if (args.target_dir.has_value()) {
-    std::filesystem::path p{*args.directory};
-    p.append(*args.target_dir);
-    process_duplicates(hdir, tom::dupdetect::duplicate_renamer{p, false});
+    std::filesystem::path target{};
+    if (args.target_dir->starts_with("/")) {
+      target = *args.target_dir;
+    } else {
+      target = {*args.directory};
+      target.append(*args.target_dir);
+    }
+    process_duplicates(hdir, tom::dupdetect::duplicate_renamer{target, false});
   } else {
     process_duplicates(
         hdir, tom::dupdetect::duplicate_printer{comp != nullptr, comp});

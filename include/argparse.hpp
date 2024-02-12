@@ -21,7 +21,8 @@ struct arguments {
   std::optional<std::string> target_dir = std::nullopt;
 };
 
-arguments parse_args(int argc, char* const argv[]);
+arguments parse_complex_args(int argc, char* const argv[]);
+arguments get_args(int argc, char *const argv[]);
 
 auto get_comparator(std::optional<arguments::comparison_method> method)
     -> bool (*)(std::string const&, std::string const&);

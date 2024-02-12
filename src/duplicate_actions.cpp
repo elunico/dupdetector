@@ -13,7 +13,7 @@ void duplicate_remover::operator()(std::string const& hash,
     return;
   seen.insert(hash);
   auto const oldSize = filenames.size();
-  auto const survivor = filenames[filenames.size() - 1];
+  std::string const survivor = std::move(filenames.back()); //filenames[filenames.size() - 1];
   if (!quiet) {
     std::cerr << hash << ": designated survivor is " << survivor << std::endl;
   }
@@ -34,7 +34,7 @@ void duplicate_printer::operator()(std::string const& hash,
   std::cout << "Duplicates of " << hash << std::endl;
   if (doSort)
     std::sort(filenames.begin(), filenames.end(), comparator);
-  for (auto& filename : filenames) {
+  for (auto const& filename : filenames) {
     std::cout << "\t" << dupcount++ << " " << filename << std::endl;
   }
 }
@@ -50,7 +50,7 @@ void duplicate_renamer::operator()(std::string const& hash,
   for (auto const& name : filenames) {
     std::filesystem::path dest = target_dir;
     std::filesystem::path file{name};
-    auto filename = file.filename();
+    auto const& filename = file.filename();
     dest.append(filename.string());
     if (!quiet)
       std::cout << "Moving " << name << " to " << dest << std::endl;

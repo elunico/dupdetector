@@ -35,10 +35,10 @@ void usage() {
   printf("       -q run in quiet mode\n");
 }
 
-duplicate_printer::comparator_type
-get_comparator(std::optional<arguments::comparison_method> method) {
+typename duplicate_printer::comparator_type
+get_comparator(std::optional<typename arguments::comparison_method> method) {
   if (!method.has_value())
-    return (duplicate_printer::comparator_type) nullptr;
+    return (typename duplicate_printer::comparator_type) nullptr;
   switch (*method) {
     case arguments::comparison_method::NEWEST: {
       return [](std::string const& s, std::string const& r) -> bool {
@@ -59,7 +59,7 @@ get_comparator(std::optional<arguments::comparison_method> method) {
   }
 }
 
-arguments parse_args(int argc, char* const argv[]) {
+arguments parse_complex_args(int argc, char* const argv[]) {
   arguments retval{};
   for (;;) {
     switch (getopt(argc, argv, "qonrd:g:")) {
@@ -117,6 +117,24 @@ arguments parse_args(int argc, char* const argv[]) {
 
 die:
   throw std::invalid_argument("Invalid CLI args");
+}
+
+arguments get_args(int argc, char *const argv[]) {
+  arguments args{};
+  if (argc == 2 && argv[1][0] == '-' && argv[1][1] == 'h') {
+    usage();
+    exit(1);
+  } else if (argc == 2 && std::string(argv[1]) != "-h") {
+    if (std::filesystem::is_directory(argv[1])) {
+      args.directory = argv[1];
+      args.doRemove = false;
+      args.method = std::nullopt;
+      args.quiet = false;
+    }
+  } else {
+    args = parse_complex_args(argc, argv);
+  }
+  return args;
 }
 
 }  // namespace tom::dupdetect
