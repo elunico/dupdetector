@@ -32,24 +32,28 @@ SHA256Hash SHA256Hash::ofFile(std::string const& filename) {
 std::string SHA256Hash::hex() const {
   std::stringstream ss;
   ss << std::hex;
-  for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i)
+  for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
     ss << std::setw(2) << std::setfill('0') << (int)data[i];
+  }
   return ss.str();
 }
 
 SHA256Builder::SHA256Builder() {
   int i = SHA256_Init(&ctx);
-  if (i == 0)
+  if (i == 0) {
     throw SHA256BuildError("Could not perform SHA256 initialization");
+  }
 }
 
 SHA256Hash SHA256Builder::finish() {
-  if (invalid)
+  if (invalid) {
     throw std::runtime_error("Builder was already finalized");
+  }
   std::array<unsigned char, SHA256_DIGEST_LENGTH> a{};
   auto i = SHA256_Final(a.data(), &ctx);
-  if (i == 0)
+  if (i == 0) {
     throw SHA256BuildError("Could not perform SHA256 finalization");
+  }
   invalid = true;
   SHA256Hash h{};
   h.data = a;

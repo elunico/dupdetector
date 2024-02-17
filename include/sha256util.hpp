@@ -23,6 +23,12 @@ struct SHA256Hash {
   static SHA256Hash ofFile(std::string const& filename);
 };
 
+template<class T>
+concept HasCharData = requires(T t) {
+  { t.data() } -> std::same_as<char*>;
+  { t.size() } -> std::same_as<std::size_t>;
+};
+
 struct SHA256Builder {
  private:
   SHA256_CTX ctx{};
@@ -31,8 +37,7 @@ struct SHA256Builder {
  public:
   SHA256Builder();
 
-  template <typename HasCharData>
-  void update(HasCharData const& s) {
+  void update(HasCharData auto const& s) {
     if (invalid)
       throw std::runtime_error("Builder was already finalized");
     auto i = SHA256_Update(&ctx, s.data(), s.size());

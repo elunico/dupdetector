@@ -37,8 +37,9 @@ void usage() {
 
 typename duplicate_printer::comparator_type
 get_comparator(std::optional<typename arguments::comparison_method> method) {
-  if (!method.has_value())
+  if (!method.has_value()) {
     return (typename duplicate_printer::comparator_type) nullptr;
+  }
   switch (*method) {
     case arguments::comparison_method::NEWEST: {
       return [](std::string const& s, std::string const& r) -> bool {
@@ -62,7 +63,10 @@ get_comparator(std::optional<typename arguments::comparison_method> method) {
 arguments parse_complex_args(int argc, char* const argv[]) {
   arguments retval{};
   for (;;) {
-    switch (getopt(argc, argv, "qonrd:g:")) {
+    switch (getopt(argc, argv, "cqonrd:g:")) {
+      case 'c':
+        retval.countOnly = true;
+        continue;
       case 'g':
         retval.target_dir = optarg;
         continue;
@@ -106,6 +110,11 @@ arguments parse_complex_args(int argc, char* const argv[]) {
 
     break;
   }
+  if (retval.countOnly && (retval.doRemove || retval.target_dir.has_value())) {
+    throw std::invalid_argument(
+        "If specifying remove (-r) and/or rename (-g), you cannot specify "
+        "countOnly (-c)");
+  }
   if (!std::filesystem::is_directory(*retval.directory)) {
     throw std::invalid_argument("Specify path as first argument");
   }
@@ -119,7 +128,7 @@ die:
   throw std::invalid_argument("Invalid CLI args");
 }
 
-arguments get_args(int argc, char *const argv[]) {
+arguments get_args(int argc, char* const argv[]) {
   arguments args{};
   if (argc == 2 && argv[1][0] == '-' && argv[1][1] == 'h') {
     usage();

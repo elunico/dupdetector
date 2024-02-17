@@ -9,11 +9,12 @@ namespace tom::dupdetect {
 
 void duplicate_remover::operator()(std::string const& hash,
                                    std::vector<std::string>& filenames) {
-  if (seen.contains(hash))
+  if (seen.contains(hash)) {
     return;
+  }
   seen.insert(hash);
   auto const oldSize = filenames.size();
-  std::string const survivor = std::move(filenames.back()); //filenames[filenames.size() - 1];
+  std::string const survivor = std::move(filenames.back());
   if (!quiet) {
     std::cerr << hash << ": designated survivor is " << survivor << std::endl;
   }
@@ -32,8 +33,9 @@ void duplicate_printer::operator()(std::string const& hash,
                                    std::vector<std::string>& filenames) const {
   long dupcount = 1;
   std::cout << "Duplicates of " << hash << std::endl;
-  if (doSort)
+  if (doSort) {
     std::sort(filenames.begin(), filenames.end(), comparator);
+  }
   for (auto const& filename : filenames) {
     std::cout << "\t" << dupcount++ << " " << filename << std::endl;
   }
@@ -44,7 +46,10 @@ void duplicate_renamer::operator()(std::string const& hash,
   if (!std::filesystem::is_directory(target_dir)) {
     std::filesystem::create_directory(target_dir);
   }
-  auto survivor = filenames[filenames.size() - 1];
+  auto const survivor = filenames.back();
+  if (!quiet) {
+    std::cerr << hash << ": designated survivor is " << survivor << std::endl;
+  }
   filenames.pop_back();
 
   for (auto const& name : filenames) {
@@ -52,10 +57,21 @@ void duplicate_renamer::operator()(std::string const& hash,
     std::filesystem::path file{name};
     auto const& filename = file.filename();
     dest.append(filename.string());
-    if (!quiet)
+    if (!quiet) {
       std::cout << "Moving " << name << " to " << dest << std::endl;
+    }
     std::filesystem::rename(name, dest);
   }
+}
+
+void duplicate_counter::operator()(const std::string& hash,
+                                   std::vector<std::string>& filenames) const {
+  if (filenames.size() <= 1) {
+    std::cerr << "Not duplicates" << std::endl;
+  }
+
+  std::cout << "Files '" << hash << "' have " << filenames.size()
+            << " duplicates" << std::endl;
 }
 
 }  // namespace tom::dupdetect

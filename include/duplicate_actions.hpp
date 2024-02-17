@@ -9,6 +9,11 @@
 #include "argparse.hpp"
 namespace tom::dupdetect {
 
+struct duplicate_counter {
+  void operator()(std::string const& hash,
+                  std::vector<std::string>& filenames) const;
+};
+
 struct duplicate_remover {
   std::unordered_set<std::string> seen{};
   bool quiet;

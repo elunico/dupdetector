@@ -14,17 +14,6 @@
 #include "print_util.hpp"
 #include "sha256util.hpp"
 
-namespace utils {
-
-template <typename T, std::size_t const width = sizeof(T)>
-std::array<std::byte, width> hosttons(T t) {
-  std::array<std::byte, width> w{};
-  for (int i = 0; i < width; i++) {
-    w[i] = (t >> (8 * i)) | 0xff;
-  }
-}
-
-}  // namespace utils
 
 namespace tom::dupdetect {
 struct hashed_directory {
@@ -115,8 +104,9 @@ void process_duplicates(hashed_directory& directory,
 }
 }  // namespace tom::dupdetect
 
-char *c;
-static unsigned long long cols = strtoull((c = getenv("COLUMNS")) != nullptr ? c : "79", nullptr, 10);
+char* c;
+static unsigned long long cols =
+    strtoull((c = getenv("COLUMNS")) != nullptr ? c : "79", nullptr, 10);
 
 int main(int argc, char* const argv[]) {
   auto args = tom::dupdetect::get_args(argc, argv);
@@ -135,6 +125,7 @@ int main(int argc, char* const argv[]) {
     std::cout << "No duplicate files found" << std::endl;
   }
 
+  
   if (args.doRemove) {
     process_duplicates(hdir, tom::dupdetect::duplicate_remover{});
   } else if (args.target_dir.has_value()) {
@@ -146,6 +137,8 @@ int main(int argc, char* const argv[]) {
       target.append(*args.target_dir);
     }
     process_duplicates(hdir, tom::dupdetect::duplicate_renamer{target, false});
+  } else if (args.countOnly) {
+    process_duplicates(hdir, tom::dupdetect::duplicate_counter{});
   } else {
     process_duplicates(
         hdir, tom::dupdetect::duplicate_printer{comp != nullptr, comp});
